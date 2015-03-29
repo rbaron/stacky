@@ -1,77 +1,106 @@
 import inspect
+import re
+
+from itertools import takewhile
+
+from stacky.func import Func
 
 
 class InvalidExpression(Exception):
     pass
 
 
+class InvalidVariableName(Exception):
+    pass
+
+
+class InvalidToken(Exception):
+    pass
+
+
+class UndefinedVariable(Exception):
+    pass
+
+
+def is_num(token):
+    try:
+        return isinstance(float(token), float)
+    except ValueError:
+        return False
+
+
+def is_valid_variable(token):
+    regex = "^[_a-zA-Z]+[_0-9a-zA-Z]*$"
+    reserved_words = "defstack max min list set eval".split()
+    return re.match(regex, token) and token not in reserved_words
+
+
+def _get_value(token, env):
+    if is_num(token):
+        return float(token)
+    elif is_valid_variable(token):
+        try:
+            return env[token]
+        except KeyError:
+            raise UndefinedVariable(token)
+    else:
+        raise InvalidToken(token)
+
+
 def eval(tokens, env):
-    """
-        Evaluates an expression in a given enviroment. For every token in expression:
 
-            - Token is a variable attribution (=)
-                * Pop two items from the evaluation stack: variable name (str), value (int)
-                * Sets enviroment[variable_name]: value
-
-            - Token is a literal (for now, only int)
-                * Append literal to evaluation stack
-
-            - Lookup token in enviroment
-
-                - Token is there
-
-                    - It's a function
-                        * Pop the function's number of args off the stack
-                        * Append the result of calling the function with the
-                            popped args back to the stack
-
-                    - It's a 'regular' variable
-                        * Append the value of that variable to the stack
-
-                - Token is not there
-                    * Append the token (str) to the stack, because maybe a "="
-                        will come afterwards and define that symbol on the enviroment
-
-
-    """
     stack = []
 
-    for token in tokens:
+    itertokens = iter(tokens)
 
+    for token in itertokens:
+
+        # Variable assignment
         if token == "=":
-            var_name = stack.pop()
-            var_value = stack.pop()
-            env[var_name] = var_value
-
-        else:
             try:
-                stack.append(int(token))
-            except ValueError:
-                try:
-                    var = env[token]
+                var_name = stack.pop()
+                var_value = stack.pop()
+            except IndexError:
+                raise InvalidExpression("Invalid variable assignment syntax")
 
-                    # It's a function: pop args and append call result
-                    if hasattr(var, "__call__"):
-                        n_args = len(inspect.getargspec(var).args)
+            if not is_valid_variable(var_name):
+                raise InvalidVariableName(var_name)
+            else:
+                env[var_name] = _get_value(var_value, env)
 
-                        args = [stack.pop() for  i in range(n_args)]
+        # User-defined function definition
+        elif token == "|":
+            func_stack = list(takewhile(lambda t: t != "defstack", itertokens))
 
-                        # 3 8 - actually means 3 - 8, which means diff(3, 8)
-                        args.reverse()
+            try:
+                func_name = func_stack.pop()
+                _ = func_stack.pop()
+            except IndexError:
+                raise InvalidExpression("Invalid defun syntax")
+            env[func_name] = Func(func_stack)
 
-                        stack.append(var(*args))
+        # Builtin function call
+        elif token in env and hasattr(env[token], "__call__"):
+            n_args = len(inspect.getargspec(env[token]).args)
 
-                    # It's a 'regular' variable
-                    else:
-                        stack.append(var)
+            try:
+                args = [_get_value(stack.pop(), env) for  i in range(n_args)]
+            except IndexError:
+                raise InvalidExpression("Not enough operands on the stack")
 
-                except KeyError:
+            args.reverse()
+            stack.append(env[token](*args))
 
-                    # Variable is not defined. Append the symbol itself
-                    stack.append(token)
+        # User defined function call
+        elif token in env and isinstance(env[token], Func):
+            stack.append(eval(env[token].call_stack, env))
 
-    #if len(stack) > 0:
-    #    raise InvalidExpression
+        # It's either a literal or a variable name
+        else:
+            stack.append(token)
 
-    return stack
+    if len(stack) > 1:
+        raise InvalidExpression("Stack leftover: {}".format(stack))
+
+    return _get_value(stack.pop(), env) if stack else None
 
