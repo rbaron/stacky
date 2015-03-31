@@ -6,4 +6,7 @@ setup(
     install_requires=[
         "nose==1.3.4"
     ],
+    scripts=[
+        "scripts/istacky",
+    ],
  )

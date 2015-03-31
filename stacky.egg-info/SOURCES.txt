@@ -1,4 +1,5 @@
 setup.py
+scripts/istacky
 stacky.egg-info/PKG-INFO
 stacky.egg-info/SOURCES.txt
 stacky.egg-info/dependency_links.txt
