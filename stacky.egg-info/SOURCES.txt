@@ -1,7 +1,0 @@
-setup.py
-scripts/istacky
-stacky.egg-info/PKG-INFO
-stacky.egg-info/SOURCES.txt
-stacky.egg-info/dependency_links.txt
-stacky.egg-info/requires.txt
-stacky.egg-info/top_level.txt
