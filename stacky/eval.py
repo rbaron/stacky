@@ -3,7 +3,7 @@ import re
 
 from itertools import takewhile
 
-from stacky.func import Func
+from stacky.func import BuiltinFunc, UserDefinedFunc
 
 
 class InvalidExpression(Exception):
@@ -70,21 +70,19 @@ def eval(tokens, env):
 
         # User-defined function definition
         elif token == "|":
-            func_stack = list(takewhile(lambda t: t != "defstack", itertokens))
+            func_stack = list(takewhile(lambda t: t != "|", itertokens))
+            func_args = list(takewhile(lambda t: t != "defstack", itertokens))
 
             try:
-                func_name = func_stack.pop()
-                _ = func_stack.pop()
+                func_name = func_args.pop()
             except IndexError:
-                raise InvalidExpression("Invalid defun syntax")
-            env[func_name] = Func(func_stack)
+                raise InvalidExpression("Invalid defstack syntax")
+            env[func_name] = UserDefinedFunc(func_stack, func_args)
 
         # Builtin function call
-        elif token in env and hasattr(env[token], "__call__"):
-            n_args = len(inspect.getargspec(env[token]).args)
-
+        elif token in env and isinstance(env[token], BuiltinFunc):
             try:
-                args = [_get_value(stack.pop(), env) for  i in range(n_args)]
+                args = [_get_value(stack.pop(), env) for  i in range(env[token].n_args)]
             except IndexError:
                 raise InvalidExpression("Not enough operands on the stack")
 
@@ -92,8 +90,15 @@ def eval(tokens, env):
             stack.append(env[token](*args))
 
         # User defined function call
-        elif token in env and isinstance(env[token], Func):
-            stack.append(eval(env[token].call_stack, env))
+        elif token in env and isinstance(env[token], UserDefinedFunc):
+
+            # TODO: implement an enviroment inheritance scheme instead of copying
+            subenv = env.copy()
+            subenv.update({
+                arg: _get_value(stack.pop(), env)
+                for arg in env[token].args[::-1]
+            })
+            stack.append(eval(env[token].call_stack, subenv))
 
         # It's either a literal or a variable name
         else:

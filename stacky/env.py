@@ -4,20 +4,22 @@
         - Keys are strings, which hold the name a variable
         - Values can be:
             * literals (ints only for now)
-            * built in functions (+, -, /), implemented as lambdas
-            * user-defined functions, which are instances of stacky.fun.Func
+            * built in functions (+, -, /), implemented as instances of stacky.fun.BuiltinFunc
+            * user-defined functions, which are instances of stacky.fun.UserDefinedFunc
 """
 
+from stacky.func import BuiltinFunc
+
 _default_env = {
-    "+": lambda x, y: x+y,
-    "-": lambda x, y: x-y,
-    "/": lambda x, y: x/y,
-    "*": lambda x, y: x*y,
-    "&": lambda x, y: x&y,
-    "|": lambda x, y: x|y,
-    "^": lambda x, y: x^y,
-    "max": lambda x, y: max(x, y),
-    "min": lambda x, y: min(x, y),
+    "+": BuiltinFunc(lambda x, y: x+y),
+    "-": BuiltinFunc(lambda x, y: x-y),
+    "/": BuiltinFunc(lambda x, y: x/y),
+    "*": BuiltinFunc(lambda x, y: x*y),
+    "&": BuiltinFunc(lambda x, y: x&y),
+    "|": BuiltinFunc(lambda x, y: x|y),
+    "^": BuiltinFunc(lambda x, y: x^y),
+    "max": BuiltinFunc(lambda x, y: max(x, y)),
+    "min": BuiltinFunc(lambda x, y: min(x, y)),
 }
 
 def make_env():

@@ -3,7 +3,7 @@ import unittest
 from stacky.eval import eval
 from stacky.eval import InvalidExpression, InvalidVariableName, InvalidToken
 from stacky.env import make_env
-from stacky.func import Func
+from stacky.func import BuiltinFunc, UserDefinedFunc
 
 
 class EvalTest(unittest.TestCase):
@@ -75,33 +75,55 @@ class EvalTest(unittest.TestCase):
         self.assertEqual(ret, None)
         self.assertEqual(self.env["var_name"], 1)
 
-    def test_it_adds_a_new_stack_with_the_right_name(self):
-        tokens = ["|", "a", "b", "+", "|", "my_fun", "defstack"]
+    def test_it_adds_a_user_defined_func_to_env__with_the_right_name(self):
+        tokens = ["|", "a", "b", "+", "|", "a", "b", "my_fun", "defstack"]
         ret = eval(tokens, self.env)
         self.assertEqual(ret, None)
+        self.assertTrue(isinstance(self.env["my_fun"], UserDefinedFunc))
         self.assertEqual(self.env["my_fun"].call_stack, ["a", "b", "+"])
 
-    def test_it_calls_a_function_by_extending_the_evaluation_stack_in_the_global_env(self):
-        tokens = "5 a = 8 b = my_fun".split()
+    def test_it_calls_an_user_defined_function_respecting_args_order(self):
+        tokens = "5 8 my_fun".split()
         self.env.update({
-            "my_fun": Func(["a", "b", "-"]),
+            "my_fun": UserDefinedFunc(["a", "b", "-"], ["a", "b"]),
         })
-        ret = eval(tokens, self.env)
-        self.assertEqual(ret, -3)
-
-    def test_it_works_with_subsequent_user_defined_functions(self):
-        tokens = ["user_defined_subtraction", "b", "=", "user_defined_division"]
-        self.env.update({
-            "user_defined_subtraction": Func(["a", "b", "-"]),
-            "user_defined_division": Func(["a", "b", "/"]),
-            "a": 5,
-            "b": 8,
-        })
-        ret = eval(tokens, self.env)
-        self.assertEqual(ret, -5/3)
-
-    def test_it_adds_new_stack_and_go_on_with_program(self):
-        tokens = ["|", "a", "b", "+", "|", "my_fun", "defstack", "5", "8", "-"]
         ret = eval(tokens, self.env)
         self.assertEqual(ret, -3.0)
-        self.assertEqual(self.env["my_fun"].call_stack, ["a", "b", "+"])
+
+    def test_it_calls_an_user_defined_function_with_variables_as_arguments(self):
+        tokens = "c d my_fun".split()
+        self.env.update({
+            "my_fun": UserDefinedFunc(["a", "b", "-"], ["a", "b"]),
+            "c": 5,
+            "d": 8,
+        })
+        ret = eval(tokens, self.env)
+        self.assertEqual(ret, -3.0)
+
+    def test_it_assigns_the_result_of_a_user_defined_function_to_a_variable(self):
+        tokens = "5 8 user_defined_subtraction my_var =".split()
+        self.env.update({
+            "user_defined_subtraction": UserDefinedFunc(["a", "b", "-"], ["a", "b"]),
+        })
+        ret = eval(tokens, self.env)
+        self.assertEqual(self.env["my_var"], -3.0)
+
+    def test_it_works_with_multiple_user_defined_calls(self):
+        tokens = "c d my_sub e my_div".split()
+        self.env.update({
+            "my_sub": UserDefinedFunc(["a", "b", "-"], ["a", "b"]),
+            "my_div": UserDefinedFunc(["a", "b", "/"], ["a", "b"]),
+            "c": 5,
+            "d": 8,
+            "e": 2,
+        })
+        ret = eval(tokens, self.env)
+        self.assertEqual(ret, -3.0/2)
+
+    def test_it_adds_user_defined_function_and_go_on_with_program(self):
+        tokens = "| a b - | a b my_fun defstack 5 a = 3 b = a b /".split()
+        ret = eval(tokens, self.env)
+        self.assertEqual(ret, 5.0/3)
+        self.assertEqual(self.env["my_fun"].call_stack, ["a", "b", "-"])
+        self.assertEqual(self.env["a"], 5.0)
+        self.assertEqual(self.env["b"], 3.0)
