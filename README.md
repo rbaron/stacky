@@ -1,5 +1,7 @@
 # stacky
 
+[![Build Status](https://travis-ci.org/rbaron/stacky.svg?branch=master)](https://travis-ci.org/rbaron/stacky)
+
 stacky is a programming language with a [RPN](http://en.wikipedia.org/wiki/Reverse_Polish_notation)-like syntax. It is currently under development. Right now, the only supported type is numeric (python equivalent to `float`).
 
 ### Applying a function
