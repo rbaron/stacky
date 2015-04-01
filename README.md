@@ -3,7 +3,7 @@
 stacky is a programming language with a [RPN](http://en.wikipedia.org/wiki/Reverse_Polish_notation)-like syntax. It is currently under development. Right now, the only supported type is numeric (python equivalent to `float`).
 
 ### Applying a function
-```bash
+```python
 > 5 8 -
 -3.0
 ```
@@ -13,7 +13,7 @@ Python equivalent:
 ```
 
 ### Defining a variable
-```bash
+```python
 > 5 a =
 > a
 5.0
@@ -24,7 +24,7 @@ Python equivalent:
 ```
 
 ### Assigning the result of an expression to a variable
-```bash
+```python
 > 5 8 / c =
 > c
 0.652
@@ -40,7 +40,7 @@ This is a particularly cool thing in the language. In order to define a function
     | function_stack | args function_name defstack
 
 Example:
-```bash
+```python
 > | a b / | a b my_division defstack
 > 5 8 my_division
 0.625
@@ -55,12 +55,12 @@ Python equivalent:
 ## Installation
 
 ### Via pypi (python3)
-```bash
+```python
 $ pip install stacky
 ```
 
 ## Opening the interactive interpreter (REPL)
-```bash
+```python
 $ istacky
 istacky: stacky interective interpreter! Type :h for help
 
