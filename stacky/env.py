@@ -15,9 +15,7 @@ _default_env = {
     "-": BuiltinFunc(lambda x, y: x-y),
     "/": BuiltinFunc(lambda x, y: x/y),
     "*": BuiltinFunc(lambda x, y: x*y),
-    "&": BuiltinFunc(lambda x, y: x&y),
-    "|": BuiltinFunc(lambda x, y: x|y),
-    "^": BuiltinFunc(lambda x, y: x^y),
+    "^": BuiltinFunc(lambda x, y: pow(x,y)),
     "max": BuiltinFunc(lambda x, y: max(x, y)),
     "min": BuiltinFunc(lambda x, y: min(x, y)),
 }

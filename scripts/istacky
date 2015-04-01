@@ -5,13 +5,61 @@ from stacky.env import make_env
 from stacky.parser import tokenize
 
 
-if __name__ == "__main__":
+def eval_input(tokens, env):
+    try:
+        ret = eval(tokens, env)
+
+        if ret:
+            print(ret)
+
+    except (
+        InvalidExpression,
+        InvalidToken,
+        InvalidVariableName,
+        UndefinedVariable,
+    ) as ex:
+      print("* {}: {}".format(ex.__class__.__name__, ex.args[0]))
+
+
+def print_env(env):
+    for key, value in env.items():
+        print("{}: {}".format(key, value))
+
+
+def print_hello():
+    print("istacky: stacky interective interpreter! Type :h for help\n")
+
+
+def print_help():
+    help = ("Commands:"
+            "\n\t:env - prints the current enviroment"
+            "\n\t:exit - exits this interactive interpreter"
+            "\n\t:h - prints this help"
+           )
+    print(help)
+
+
+def get_input():
+    print("> ", end="")
+    return input()
+
+
+def main():
     env = make_env()
-    expr = input()
 
-    while expr != "exit":
+    print_hello()
 
-        if is_num(expr):
+    expr = get_input()
+
+    while expr != ":exit":
+
+        if expr == ":env":
+            print_env(env)
+
+        elif expr == ":h":
+            print_help()
+
+        elif is_num(expr):
             print(float(expr))
 
         elif is_valid_variable(expr):
@@ -21,19 +69,11 @@ if __name__ == "__main__":
                 print("Undefined variable")
 
         else:
-            try:
-                ret = eval(tokenize(expr), env)
+            eval_input(tokenize(expr), env)
 
-                if ret:
-                    print(ret)
+        print("")
+        expr = get_input()
 
-            except (
-                InvalidExpression,
-                InvalidToken,
-                InvalidVariableName,
-                UndefinedVariable,
-            ) as ex:
-              print("\n* {}: {}\n".format(ex.__class__.__name__, ex.args[0]))
 
-        expr = input()
-
+if __name__ == "__main__":
+    main()

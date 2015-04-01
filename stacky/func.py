@@ -15,6 +15,9 @@ class BuiltinFunc(Func):
     def n_args(self):
         return len(inspect.getargspec(self.lambda_).args)
 
+    def __str__(self):
+        return "Built-in function"
+
     def __call__(self, *args):
         return self.lambda_.__call__(*args)
 
@@ -27,6 +30,9 @@ class UserDefinedFunc(Func):
     @property
     def n_args(self):
         return len(self.args)
+
+    def __str__(self):
+        return "User-defined function"
 
     @property
     def call_stack(self):
